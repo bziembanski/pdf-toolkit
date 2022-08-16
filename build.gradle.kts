@@ -9,14 +9,14 @@ plugins {
 }
 
 group = "org.bziembanski"
-version = "0.0.1"
+version = "0.0.2"
 
 application {
     mainClass.set("org.bziembanski.ApplicationKt")
     project.ext.set("development", null)
 
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment","-Xmx300m", "-Xss512k", "-XX:CICompilerCount=2")
 }
 
 repositories {
