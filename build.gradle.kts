@@ -13,10 +13,7 @@ version = "0.0.2"
 
 application {
     mainClass.set("org.bziembanski.ApplicationKt")
-    project.ext.set("development", null)
-
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment","-Xmx300m", "-Xss512k", "-XX:CICompilerCount=2")
+    applicationDefaultJvmArgs = listOf("-Xmx300m", "-Xss512k", "-XX:CICompilerCount=2")
 }
 
 repositories {
@@ -34,7 +31,6 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-partial-content:$ktorVersion")
     implementation("io.ktor:ktor-server-auto-head-response:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.apache.pdfbox:pdfbox-tools:3.0.0-RC1")
 }
 
