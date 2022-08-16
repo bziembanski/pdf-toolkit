@@ -1,7 +1,7 @@
-package com.example.plugins
+package org.bziembanski.plugins
 
-import com.example.toJPG.ToJpgService
-import com.example.toJPG.toJpg
+import org.bziembanski.toJPG.ToJpgService
+import org.bziembanski.toJPG.toJpg
 import io.ktor.server.routing.*
 import io.ktor.server.http.content.*
 import io.ktor.server.application.*

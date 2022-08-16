@@ -1,4 +1,4 @@
-package com.example.plugins
+package org.bziembanski.plugins
 
 import io.ktor.http.*
 import io.ktor.server.plugins.cors.routing.*

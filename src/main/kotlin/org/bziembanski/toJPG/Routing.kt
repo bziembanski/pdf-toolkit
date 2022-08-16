@@ -1,4 +1,4 @@
-package com.example.toJPG
+package org.bziembanski.toJPG
 
 import io.ktor.http.*
 import io.ktor.http.content.*
