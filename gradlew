@@ -44,7 +44,7 @@ APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='"-Xmx300m" "-Xss512k"" -XX:CICompilerCount=2" "-XX:CICompilerCount=2" "-Xlog:gc*" "-Xlog:gc::utctime" "-XX:NativeMemoryTracking=summary" "-Xlog:age*=trace" "-XX:+UseConcMarkSweepGC"'
+DEFAULT_JVM_OPTS='"-Xmx300m" "-Xss512k" "-XX:CICompilerCount=2" "-XX:CICompilerCount=2" "-Xlog:gc*" "-Xlog:gc::utctime" "-XX:NativeMemoryTracking=summary" "-Xlog:age*=trace" "-XX:+UseConcMarkSweepGC"'
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
