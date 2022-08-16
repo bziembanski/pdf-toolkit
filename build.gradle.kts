@@ -37,3 +37,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.apache.pdfbox:pdfbox-tools:3.0.0-RC1")
 }
+
+tasks {
+    create("stage").dependsOn("installDist")
+}

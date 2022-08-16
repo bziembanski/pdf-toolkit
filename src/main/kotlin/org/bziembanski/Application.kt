@@ -10,7 +10,7 @@ import org.bziembanski.plugins.configureRouting
 import org.bziembanski.plugins.configureSerialization
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+    embeddedServer(Netty, port = System.getenv("PORT").toInt()) {
         install(PartialContent)
         install(AutoHeadResponse)
         configureRouting()
