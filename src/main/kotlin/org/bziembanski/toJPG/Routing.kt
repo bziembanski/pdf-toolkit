@@ -39,17 +39,22 @@ fun Route.toJpg(service: ToJpgService) {
                                 close()
                             }
                             val list = service.pdfToImages(fileName)
-                            val name = service.imagesToPdf(fileName, list)
-                            val file = File(name)
-                            call.response.header(
-                                HttpHeaders.ContentDisposition,
-                                ContentDisposition.Attachment.withParameter(
-                                    ContentDisposition.Parameters.FileName,
-                                    name
+                            if(list.isNotEmpty()){
+                                val name = service.imagesToPdf(fileName, list)
+                                val file = File(name)
+                                call.response.header(
+                                    HttpHeaders.ContentDisposition,
+                                    ContentDisposition.Attachment.withParameter(
+                                        ContentDisposition.Parameters.FileName,
+                                        name
+                                    )
+                                        .toString()
                                 )
-                                    .toString()
-                            )
-                            call.respondFile(file)
+                                call.respondFile(file)
+                            }
+                            else {
+                                call.respond(HttpStatusCode.InternalServerError, "Błąd serwera")
+                            }
                         }
                     }
                     else -> {}
