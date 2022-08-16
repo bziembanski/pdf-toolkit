@@ -13,7 +13,9 @@ version = "0.0.2"
 
 application {
     mainClass.set("org.bziembanski.ApplicationKt")
-    applicationDefaultJvmArgs = listOf("-Xmx300m", "-Xss512k", "-XX:CICompilerCount=2")
+
+    val isDevelopment: Boolean = project.ext.has("development")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment","-Xmx300m", "-Xss512k", "-XX:CICompilerCount=2")
 }
 
 repositories {
