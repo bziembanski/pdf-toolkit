@@ -39,7 +39,7 @@ fun Route.toJpg(service: ToJpgService) {
                                 close()
                             }
                             val list = service.pdfToImages(fileName)
-                            if(list.isNotEmpty()){
+                            if (list.isNotEmpty()) {
                                 val name = service.imagesToPdf(fileName, list)
                                 val file = File(name)
                                 call.response.header(
@@ -51,12 +51,12 @@ fun Route.toJpg(service: ToJpgService) {
                                         .toString()
                                 )
                                 call.respondFile(file)
-                            }
-                            else {
-                                call.respondText(text="Błąd serwera", status = HttpStatusCode.InternalServerError)
+                            } else {
+                                call.respondText(text = "Błąd serwera", status = HttpStatusCode.InternalServerError)
                             }
                         }
                     }
+
                     else -> {}
                 }
             }

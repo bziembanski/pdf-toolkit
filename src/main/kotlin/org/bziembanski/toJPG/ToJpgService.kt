@@ -41,12 +41,10 @@ class ToJpgService {
 
             } catch (e: Error) {
                 e.printStackTrace()
-            } finally {
-                document.close()
             }
 
         }
-
+        document.close()
         return imagesList
     }
 
