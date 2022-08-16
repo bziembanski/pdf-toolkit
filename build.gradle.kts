@@ -33,6 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-partial-content:$ktorVersion")
     implementation("io.ktor:ktor-server-auto-head-response:$ktorVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.apache.pdfbox:pdfbox-tools:3.0.0-RC1")
 }
 
