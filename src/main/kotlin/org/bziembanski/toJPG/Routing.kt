@@ -53,7 +53,7 @@ fun Route.toJpg(service: ToJpgService) {
                                 call.respondFile(file)
                             }
                             else {
-                                call.respond(HttpStatusCode.InternalServerError, "Błąd serwera")
+                                call.respondText(text="Błąd serwera", status = HttpStatusCode.InternalServerError)
                             }
                         }
                     }
