@@ -1,6 +1,7 @@
 package org.bziembanski.toJPG
 
 import org.apache.pdfbox.Loader
+import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -11,23 +12,41 @@ import org.apache.pdfbox.rendering.PDFRenderer
 import org.apache.pdfbox.tools.imageio.ImageIOUtil
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Paths
 import javax.imageio.ImageIO
 
 
 class ToJpgService {
     fun pdfToImages(fileName: String): List<String> {
-        val bytes = Files.readAllBytes(Paths.get(uploadsDir, fileName))
-        val document: PDDocument = Loader.loadPDF(bytes)
-        val pdfRenderer = PDFRenderer(document)
+        val document = Loader.loadPDF(
+            Files.newInputStream(
+                Paths.get(
+                    uploadsDir,
+                    fileName
+                )
+            ),
+            MemoryUsageSetting.setupTempFileOnly()
+        )
+        val pdfRenderer = PDFRenderer(document).apply {
+            isSubsamplingAllowed = true
+        }
         val imagesList = mutableListOf<String>()
         for (i in 0 until document.numberOfPages) {
-            val bim = pdfRenderer.renderImageWithDPI(i, DPI, ImageType.RGB)
-            val path = Paths.get(uploadsDir, "$fileName$i.$imageExtension")
-            ImageIOUtil.writeImage(bim, path.toString(), DPI.toInt())
-            imagesList.add(path.toString())
+            try {
+                val bim = pdfRenderer.renderImageWithDPI(i, DPI, ImageType.RGB)
+                val path = Paths.get(uploadsDir, "$fileName$i.$imageExtension")
+                ImageIOUtil.writeImage(bim, path.toString(), DPI.toInt())
+                imagesList.add(path.toString())
+
+            } catch (e: Error) {
+                e.printStackTrace()
+            } finally {
+                document.close()
+            }
+
         }
-        document.close()
+
         return imagesList
     }
 
