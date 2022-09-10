@@ -11,54 +11,66 @@ import kotlinx.coroutines.withContext
 import java.io.DataOutputStream
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 fun Route.toJpg(service: ToJpgService) {
     route("/toJpg") {
         post {
-            var fileName: String
-            val multipartData = call.receiveMultipart()
-            multipartData.forEachPart { part ->
+            lateinit var fileName: String
+            lateinit var path: Path
+            lateinit var fileBytes: ByteArray
+            val filesToDelete = mutableListOf<String>()
+            call.receiveMultipart().forEachPart { part ->
                 when (part) {
                     is PartData.FileItem -> {
                         fileName = part.originalFileName ?: ""
-                        val fileBytes = part.streamProvider().readBytes()
-                        val path = Paths.get("uploads", fileName)
-                        withContext(Dispatchers.IO) {
-                            Files.createDirectories(path.parent)
-                            DataOutputStream(
-                                Files.newOutputStream(
-                                    path,
-                                    StandardOpenOption.CREATE,
-                                    StandardOpenOption.WRITE
-                                )
-                            ).apply {
-                                write(fileBytes)
-                                flush()
-                                close()
-                            }
-                            val list = service.pdfToImages(fileName)
-                            if (list.isNotEmpty()) {
-                                val name = service.imagesToPdf(fileName, list)
-                                val file = File(name)
-                                call.response.header(
-                                    HttpHeaders.ContentDisposition,
-                                    ContentDisposition.Attachment.withParameter(
-                                        ContentDisposition.Parameters.FileName,
-                                        name
-                                    )
-                                        .toString()
-                                )
-                                call.respondFile(file)
-                            } else {
-                                call.respondText(text = "Błąd serwera", status = HttpStatusCode.InternalServerError)
-                            }
-                        }
+                        fileBytes = part.streamProvider().readBytes()
+                        path = Paths.get(ToJpgService.uploadsDir, fileName)
                     }
 
                     else -> {}
                 }
+            }
+            withContext(Dispatchers.IO) {
+                Files.createDirectories(path.parent)
+                DataOutputStream(
+                    Files.newOutputStream(
+                        path,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE
+                    )
+                ).apply {
+                    write(fileBytes)
+                    flush()
+                    close()
+                }
+            }
+            filesToDelete.add(path.toString())
+            val list = service.pdfToImages(fileName).also{
+                filesToDelete.addAll(it)
+            }
+            if (list.isNotEmpty()) {
+                val name = service.imagesToPdf(fileName, list)
+                filesToDelete.add(name)
+                val image = File(name)
+                call.response.header(
+                    HttpHeaders.ContentDisposition,
+                    ContentDisposition.Attachment.withParameter(
+                        ContentDisposition.Parameters.FileName,
+                        name
+                    )
+                        .toString()
+                )
+                call.respondFile(image)
+                withContext(Dispatchers.IO){
+                    filesToDelete.forEach {
+                        File(it).delete()
+                    }
+                }
+            } else {
+                call.respondText(text = "Błąd serwera", status = HttpStatusCode.InternalServerError)
             }
         }
     }
