@@ -60,34 +60,33 @@ fun Route.toJpg() {
 
     suspend fun pdfToImages(fileName: String): List<String> {
         return withContext(Dispatchers.IO) {
-            val document = Loader.loadPDF(
-                Files.newInputStream(
-                    Paths.get(
-                        uploadsDir,
-                        fileName
-                    )
-                ),
-                MemoryUsageSetting.setupTempFileOnly()
-            )
-            val pdfRenderer = PDFRenderer(document).apply {
-                isSubsamplingAllowed = true
-            }
             val imagesList = mutableListOf<String>()
-
-            for (i in 0 until document.numberOfPages) {
-                try {
-                    val bim = pdfRenderer.renderImageWithDPI(i, dpi, ImageType.RGB)
-                    val path = Paths.get(uploadsDir, "$fileName$i.$imageExtension")
-                    ImageIOUtil.writeImage(bim, path.toString(), dpi.toInt())
-                    imagesList.add(path.toString())
-
-                } catch (e: Error) {
-                    e.printStackTrace()
+            var document: PDDocument? = null
+            try {
+                document = Loader.loadPDF(
+                    Files.newInputStream(
+                        Paths.get(
+                            uploadsDir,
+                            fileName
+                        )
+                    ),
+                    MemoryUsageSetting.setupTempFileOnly()
+                )
+                val pdfRenderer = PDFRenderer(document).apply {
+                    isSubsamplingAllowed = true
                 }
 
-
+                document.pages.forEachIndexed { index, _ ->
+                    val bim = pdfRenderer.renderImageWithDPI(index, dpi, ImageType.RGB)
+                    val path = Paths.get(uploadsDir, "$fileName$index.$imageExtension")
+                    ImageIOUtil.writeImage(bim, path.toString(), dpi.toInt())
+                    imagesList.add(path.toString())
+                }
+            } catch (e: Error) {
+                e.printStackTrace()
+            } finally {
+                document?.close()
             }
-            document.close()
             imagesList
         }
     }
