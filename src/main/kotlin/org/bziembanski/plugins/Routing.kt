@@ -6,8 +6,6 @@ import io.ktor.server.routing.*
 import org.bziembanski.toJPG.toJpg
 
 fun Application.configureRouting() {
-
-
     routing {
         resource("/", "index.html", "static")
         toJpg()
