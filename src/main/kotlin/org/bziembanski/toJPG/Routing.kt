@@ -8,7 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.bziembanski.utils.Methods
+import org.bziembanski.utils.Utility.FilesMethods
 import java.io.File
 
 fun Route.toJpg() {
@@ -19,8 +19,8 @@ fun Route.toJpg() {
                 is PartData.FileItem -> {
                     val fileName = part.originalFileName ?: ""
 
-                    Methods.generatePath(fileName).also { path ->
-                        Methods.saveRequestFile(part.streamProvider().readBytes(), path)
+                    FilesMethods.generatePath(fileName).also { path ->
+                        FilesMethods.saveRequestFile(part.streamProvider().readBytes(), path)
                         filesToDelete.add(path.toString())
                     }
 

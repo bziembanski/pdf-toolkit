@@ -13,8 +13,8 @@ import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.apache.pdfbox.tools.imageio.ImageIOUtil
 import org.bziembanski.utils.Constants
-import org.bziembanski.utils.Methods
-import org.bziembanski.utils.Methods.Companion.toPDSize
+import org.bziembanski.utils.Utility.FilesMethods
+import org.bziembanski.utils.Utility.PdfMethods.Companion.toPDSize
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -42,7 +42,8 @@ interface ToJpg {
 
                     document.pages.forEachIndexed { index, _ ->
                         val bim = pdfRenderer.renderImageWithDPI(index, Constants.Dimensions.dpi, ImageType.RGB)
-                        val path = Methods.generatePath("$fileName$index.${Constants.FileExtensions.imageExtension}")
+                        val path =
+                            FilesMethods.generatePath("$fileName$index.${Constants.FileExtensions.imageExtension}")
                         ImageIOUtil.writeImage(bim, path.toString(), Constants.Dimensions.dpi.toInt())
                         imagesList.add(path.toString())
                     }
@@ -81,7 +82,7 @@ interface ToJpg {
                     }
                     document.addPage(page)
                 }
-                val path = Methods.generatePath(
+                val path = FilesMethods.generatePath(
                     "$fileName${Constants.FileNames.newFileName}.${Constants.FileExtensions.pdfExtension}"
                 )
                 document.save(path.toString())
