@@ -9,16 +9,15 @@ import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.apache.pdfbox.tools.imageio.ImageIOUtil
 import org.bziembanski.utils.Constants
 import org.bziembanski.utils.Utility.FilesMethods
 import org.bziembanski.utils.Utility.PdfMethods.Companion.toPDSize
-import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
-import javax.imageio.ImageIO
+import java.nio.file.Path
 
 interface ToJpg {
     companion object {
@@ -27,25 +26,33 @@ interface ToJpg {
                 val imagesList = mutableListOf<String>()
                 var document: PDDocument? = null
                 try {
-                    document = Loader.loadPDF(
-                        Files.newInputStream(
-                            Paths.get(
-                                Constants.FileNames.uploadsDir,
-                                fileName
-                            )
-                        ),
-                        MemoryUsageSetting.setupTempFileOnly()
-                    )
-                    val pdfRenderer = PDFRenderer(document).apply {
-                        isSubsamplingAllowed = true
-                    }
+                    Files.newInputStream(
+                        FilesMethods.generatePath(fileName)
+                    ).apply {
+                        document = Loader.loadPDF(
+                            this,
+                            MemoryUsageSetting.setupTempFileOnly()
+                        )
+                        val pdfRenderer = PDFRenderer(document).apply {
+                            isSubsamplingAllowed = true
+                        }
 
-                    document.pages.forEachIndexed { index, _ ->
-                        val bim = pdfRenderer.renderImageWithDPI(index, Constants.Dimensions.dpi, ImageType.RGB)
-                        val path =
-                            FilesMethods.generatePath("$fileName$index.${Constants.FileExtensions.imageExtension}")
-                        ImageIOUtil.writeImage(bim, path.toString(), Constants.Dimensions.dpi.toInt())
-                        imagesList.add(path.toString())
+                        document?.pages?.forEachIndexed { index, _ ->
+                            val bim = pdfRenderer.renderImageWithDPI(index, Constants.Dimensions.dpi, ImageType.RGB)
+                            val path = FilesMethods.generatePath(
+                                "$fileName$index.${Constants.FileExtensions.imageExtension}"
+                            )
+
+                            val wasWritten = ImageIOUtil.writeImage(
+                                bim,
+                                path.toString(),
+                                Constants.Dimensions.dpi.toInt()
+                            )
+                            if (wasWritten) {
+                                imagesList.add(path.toString())
+                            }
+                        }
+                        close()
                     }
                 } catch (e: Error) {
                     e.printStackTrace()
@@ -60,16 +67,18 @@ interface ToJpg {
             return withContext(Dispatchers.IO) {
                 val document = PDDocument()
                 list.forEach { path ->
-                    val image = ImageIO.read(File(path))
+                    val pdImageXObject: PDImageXObject
+                    Files.newInputStream(Path.of(path)).apply {
+                        pdImageXObject = JPEGFactory.createFromStream(document, this)
+                        close()
+                    }
 
                     val rectangle = PDRectangle(
-                        image.width.toPDSize(),
-                        image.height.toPDSize()
+                        pdImageXObject.image.width.toPDSize(),
+                        pdImageXObject.image.height.toPDSize()
                     )
                     val page = PDPage(rectangle)
 
-                    val pdImageXObject = JPEGFactory.createFromImage(document, image)
-                    PDRectangle()
                     PDPageContentStream(document, page).apply {
                         drawImage(
                             pdImageXObject,

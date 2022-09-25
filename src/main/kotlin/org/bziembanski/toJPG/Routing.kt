@@ -20,7 +20,10 @@ fun Route.toJpg() {
                     val fileName = part.originalFileName ?: ""
 
                     FilesMethods.generatePath(fileName).also { path ->
-                        FilesMethods.saveRequestFile(part.streamProvider().readBytes(), path)
+                        part.streamProvider().apply {
+                            FilesMethods.saveRequestFile(readBytes(), path)
+                            close()
+                        }
                         filesToDelete.add(path.toString())
                     }
 
