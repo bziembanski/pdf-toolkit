@@ -15,7 +15,7 @@ application {
     mainClass.set("org.bziembanski.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+//     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
 repositories {
@@ -34,5 +34,5 @@ dependencies {
     implementation("io.ktor:ktor-server-partial-content:$ktorVersion")
     implementation("io.ktor:ktor-server-auto-head-response:$ktorVersion")
     implementation("org.apache.pdfbox:pdfbox-tools:3.0.0-RC1")
-    implementation("ch.qos.logback:logback-classic:1.4.0")
+    implementation("ch.qos.logback:logback-classic:1.4.1")
 }
