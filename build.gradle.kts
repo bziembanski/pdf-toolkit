@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.bziembanski"
-version = "0.0.3"
+version = "0.0.4"
 
 application {
     mainClass.set("org.bziembanski.ApplicationKt")

@@ -9,11 +9,12 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bziembanski.utils.Utility.FilesMethods
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.name
 
 fun Route.toJpg() {
     post("/toJpg") {
-        val filesToDelete = mutableListOf<String>()
+        val filesToDelete = mutableListOf<Path>()
         call.receiveMultipart().forEachPart { part ->
             when (part) {
                 is PartData.FileItem -> {
@@ -24,39 +25,36 @@ fun Route.toJpg() {
                             FilesMethods.saveRequestFile(readBytes(), path)
                             close()
                         }
-                        filesToDelete.add(path.toString())
-                    }
+                        filesToDelete.add(path)
 
-                    ToJpg.pdfToImages(fileName).also { list ->
-                        if (list.isNotEmpty()) {
-                            ToJpg.imagesToPdf(fileName, list).also { name ->
-                                call.response.header(
-                                    HttpHeaders.ContentDisposition,
-                                    ContentDisposition.Attachment.withParameter(
-                                        ContentDisposition.Parameters.FileName,
-                                        name
-                                    )
-                                        .toString()
-                                )
-                                call.respondFile(File(name))
-                                filesToDelete.add(name)
-                            }
-                            filesToDelete.addAll(list)
-                        } else {
-                            call.respondText(
-                                text = "Błąd serwera",
-                                status = HttpStatusCode.InternalServerError
-                            )
+                        val toJpg = ToJpg(path)
+
+                        toJpg.pdfToImages().apply {
+                            filesToDelete.addAll(this)
                         }
+
+                        val pdf = toJpg.imagesToPdf()
+                        filesToDelete.add(pdf)
+
+                        call.response.header(
+                            HttpHeaders.ContentDisposition,
+                            ContentDisposition.Attachment.withParameter(
+                                ContentDisposition.Parameters.FileName,
+                                pdf.name
+                            )
+                                .toString()
+                        )
+                        call.respondFile(pdf.toFile())
                     }
                 }
 
                 else -> {}
             }
         }
+
         withContext(Dispatchers.IO) {
             filesToDelete.forEach {
-                File(it).delete()
+                it.toFile().delete()
             }
         }
     }

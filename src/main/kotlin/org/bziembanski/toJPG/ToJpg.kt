@@ -18,86 +18,85 @@ import org.bziembanski.utils.Utility.FilesMethods
 import org.bziembanski.utils.Utility.PdfMethods.Companion.toPDSize
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.name
 
-interface ToJpg {
-    companion object {
-        suspend fun pdfToImages(fileName: String): List<String> {
-            return withContext(Dispatchers.IO) {
-                val imagesList = mutableListOf<String>()
-                var document: PDDocument? = null
-                try {
-                    Files.newInputStream(
-                        FilesMethods.generatePath(fileName)
-                    ).apply {
-                        document = Loader.loadPDF(
-                            this,
-                            MemoryUsageSetting.setupTempFileOnly()
-                        )
-                        val pdfRenderer = PDFRenderer(document).apply {
-                            isSubsamplingAllowed = true
-                        }
-
-                        document?.pages?.forEachIndexed { index, _ ->
-                            val bim = pdfRenderer.renderImageWithDPI(index, Constants.Dimensions.dpi, ImageType.RGB)
-                            val path = FilesMethods.generatePath(
-                                "$fileName$index.${Constants.FileExtensions.imageExtension}"
-                            )
-
-                            val wasWritten = ImageIOUtil.writeImage(
-                                bim,
-                                path.toString(),
-                                Constants.Dimensions.dpi.toInt()
-                            )
-                            if (wasWritten) {
-                                imagesList.add(path.toString())
-                            }
-                        }
-                        close()
-                    }
-                } catch (e: Error) {
-                    e.printStackTrace()
-                } finally {
-                    document?.close()
-                }
-                imagesList
-            }
-        }
-
-        suspend fun imagesToPdf(fileName: String, list: List<String>): String {
-            return withContext(Dispatchers.IO) {
-                val document = PDDocument()
-                list.forEach { path ->
-                    val pdImageXObject: PDImageXObject
-                    Files.newInputStream(Path.of(path)).apply {
-                        pdImageXObject = JPEGFactory.createFromStream(document, this)
-                        close()
-                    }
-
-                    val rectangle = PDRectangle(
-                        pdImageXObject.image.width.toPDSize(),
-                        pdImageXObject.image.height.toPDSize()
+class ToJpg(private val pdfFilePath: Path) {
+    private val imagesPaths = mutableListOf<Path>()
+    suspend fun pdfToImages(): List<Path> {
+        return withContext(Dispatchers.IO) {
+            var document: PDDocument? = null
+            try {
+                Files.newInputStream(
+                    pdfFilePath
+                ).apply {
+                    document = Loader.loadPDF(
+                        this,
+                        MemoryUsageSetting.setupTempFileOnly()
                     )
-                    val page = PDPage(rectangle)
-
-                    PDPageContentStream(document, page).apply {
-                        drawImage(
-                            pdImageXObject,
-                            0f,
-                            0f,
-                            rectangle.width,
-                            rectangle.height,
-                        )
-                        close()
+                    val pdfRenderer = PDFRenderer(document).apply {
+                        isSubsamplingAllowed = true
                     }
-                    document.addPage(page)
+
+                    document?.pages?.forEachIndexed { index, _ ->
+                        val bim = pdfRenderer.renderImageWithDPI(index, Constants.Dimensions.dpi, ImageType.RGB)
+                        val path = FilesMethods.generatePath(
+                            "${pdfFilePath.name}$index.${Constants.FileExtensions.imageExtension}"
+                        )
+
+                        val wasWritten = ImageIOUtil.writeImage(
+                            bim,
+                            path.toString(),
+                            Constants.Dimensions.dpi.toInt()
+                        )
+                        if (wasWritten) {
+                            imagesPaths.add(path)
+                        }
+                    }
+                    close()
                 }
-                val path = FilesMethods.generatePath(
-                    "$fileName${Constants.FileNames.newFileName}.${Constants.FileExtensions.pdfExtension}"
-                )
-                document.save(path.toString())
-                document.close()
-                path.toString()
+            } catch (e: Error) {
+                e.printStackTrace()
+            } finally {
+                document?.close()
             }
+            imagesPaths
+        }
+    }
+
+    suspend fun imagesToPdf(): Path {
+        return withContext(Dispatchers.IO) {
+            val document = PDDocument()
+            imagesPaths.forEach { path ->
+                val pdImageXObject: PDImageXObject
+                Files.newInputStream(path).apply {
+                    pdImageXObject = JPEGFactory.createFromStream(document, this)
+                    close()
+                }
+
+                val rectangle = PDRectangle(
+                    pdImageXObject.image.width.toPDSize(),
+                    pdImageXObject.image.height.toPDSize()
+                )
+                val page = PDPage(rectangle)
+
+                PDPageContentStream(document, page).apply {
+                    drawImage(
+                        pdImageXObject,
+                        0f,
+                        0f,
+                        rectangle.width,
+                        rectangle.height,
+                    )
+                    close()
+                }
+                document.addPage(page)
+            }
+            val path = FilesMethods.generatePath(
+                "${pdfFilePath.name}${Constants.FileNames.newFileName}.${Constants.FileExtensions.pdfExtension}"
+            )
+            document.save(path.toString())
+            document.close()
+            path
         }
     }
 }

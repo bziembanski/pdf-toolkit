@@ -1,1 +1,0 @@
-web: ./build/install/pdf-toolkit/bin/pdf-toolkit
